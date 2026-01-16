@@ -4,6 +4,8 @@ project(server_headless LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+add_subdirectory(../common common_build)
+
 add_executable(server_headless
     src/main.cpp
 )
@@ -17,3 +19,5 @@ target_include_directories(server_headless PRIVATE
 target_compile_definitions(server_headless PRIVATE
     ASIO_STANDALONE
 )
+
+target_link_libraries(server_headless common)

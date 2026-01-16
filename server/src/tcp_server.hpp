@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include <iostream> // prolly want better logging
 #include <cstdint>
+#include <functional>
 
 #include <asio.hpp>
 
@@ -31,6 +32,10 @@ public:
         m_acceptor.close();
     }
 
+    void set_on_accept_callback(std::function<void(size_t)>&& callback) {
+        m_on_accept_callback = callback;
+    }
+
 private:
     void start_accept() {
         tcp_connection::pointer new_connection = tcp_connection::create(m_io_context);
@@ -50,7 +55,10 @@ private:
             return; 
         }
 
-        new_connection->start();
+        if (m_on_accept_callback) {
+            m_on_accept_callback(m_connection_count);
+        }
+
         m_connections.emplace(m_connection_count, new_connection);
         m_connection_count++;
 
@@ -61,6 +69,7 @@ private:
 
 private:
     size_t m_connection_count = 0;
+    std::function<void(size_t)> m_on_accept_callback;
     asio::io_context m_io_context;
     tcp::acceptor m_acceptor;
     std::unordered_map<size_t, tcp_connection::pointer> m_connections;

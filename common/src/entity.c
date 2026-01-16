@@ -6,33 +6,33 @@
 #include <endian.h>
 #include <sys/socket.h>
 
-#include <esp_log.h>
+//#include <esp_log.h>
 
 // ==========private==========
-// creates a packed entity struct to allow sending data over network
-// no padding occurs so bytes are as presented 
-typedef struct __attribute__((packed)) { 
-    uint64_t id;
-    int8_t is_alive;
-} net_entity_t;
+// // creates a packed entity struct to allow sending data over network
+// // no padding occurs so bytes are as presented 
+// typedef struct __attribute__((packed)) { 
+//     uint64_t id;
+//     int8_t is_alive;
+// } net_entity_t;
 
-net_entity_t host_to_network_entity(entity_t entity) {
-    net_entity_t net_entity = {
-        .id = htobe64(entity.id), // convert endians for network (swap byte sequence)
-        .is_alive = entity.is_alive, // not needed for byte since swapping byte is the name
-    };
+// net_entity_t host_to_network_entity(entity_t entity) {
+//     net_entity_t net_entity = {
+//         .id = htobe64(entity.id), // convert endians for network (swap byte sequence)
+//         .is_alive = entity.is_alive, // not needed for byte since swapping byte is the name
+//     };
 
-    return net_entity;
-}
+//     return net_entity;
+// }
 
-entity_t network_to_host_entity(net_entity_t net_entity) {
-    entity_t e = {
-        .id = be64toh(net_entity.id), // convert endians for host (swap byte sequence)
-        .is_alive = net_entity.is_alive,
-    };
+// entity_t network_to_host_entity(net_entity_t net_entity) {
+//     entity_t e = {
+//         .id = be64toh(net_entity.id), // convert endians for host (swap byte sequence)
+//         .is_alive = net_entity.is_alive,
+//     };
 
-    return e;
-}
+//     return e;
+// }
 // ==========private==========
 
 // impl ref: https://stackoverflow.com/questions/78331087/can-a-tcp-ip-socket-send-less-than-the-bytes-requested-via-write-send
