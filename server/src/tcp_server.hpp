@@ -32,24 +32,47 @@ public:
         m_acceptor.close();
     }
 
-    void set_on_accept_callback(std::function<void(size_t)>&& callback) {
-        m_on_accept_callback = callback;
+    void toggle_read_from_client(bool enable) {
+        for (auto [_, connection] : m_connections) {
+            connection->toggle_read_from_client(enable);
+        }
     }
 
-    void send(size_t connection_id, const entity_t& entity) {
+    void send_to_client_by(size_t connection_id, const entity_t& entity) {
         if (m_connections.contains(connection_id)) {
-            m_connections.at(connection_id)->send(entity);
+            m_connections.at(connection_id)->send_to_client(entity);
         }
+        else {
+            std::cout << "Connection ID not found: " << connection_id << std::endl;
+        }
+    }
+
+    void set_on_accept_callback(std::function<void(size_t)>&& callback) {
+        m_on_accept_callback = std::move(callback);
+    }
+
+    void set_on_receive_callback(std::function<void(const entity_t&)>&& callback) {
+        m_on_receive_callback = std::move(callback);
+    }
+
+    void set_on_close_connection_callback(std::function<void(size_t)>&& callback) {
+        m_on_connection_close_callback = std::move(callback);
     }
 
 private:
     void start_accept() {
-        tcp_connection::pointer new_connection = tcp_connection::create(m_io_context);
+        tcp_connection::pointer new_connection = tcp_connection::create(
+            m_io_context,
+            &m_on_receive_callback,
+            &m_on_connection_close_callback
+        );
 
         m_acceptor.async_accept(
             new_connection->socket(), 
             std::bind(
-                &tcp_server::handle_accept, this, new_connection,
+                &tcp_server::handle_accept, 
+                this, 
+                new_connection,
                 asio::placeholders::error
             )
         );
@@ -60,7 +83,8 @@ private:
             std::cout << "handle_accept error: " + error.message() << std::endl;
             return; 
         }
-
+        
+        new_connection->assign_id(m_connection_count);
         m_connections.emplace(m_connection_count, new_connection);
 
         if (m_on_accept_callback) {
@@ -77,6 +101,8 @@ private:
 private:
     size_t m_connection_count = 0;
     std::function<void(size_t)> m_on_accept_callback;
+    std::function<void(const entity_t&)> m_on_receive_callback;
+    std::function<void(size_t)> m_on_connection_close_callback;
     asio::io_context m_io_context;
     tcp::acceptor m_acceptor;
     std::unordered_map<size_t, tcp_connection::pointer> m_connections;

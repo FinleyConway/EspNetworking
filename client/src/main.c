@@ -43,7 +43,7 @@ void app_main(void) {
         return;
     }
 
-    tcp_result_t tcp_result = connect_to_tcp_server("192.168.1.115", 8080);
+    tcp_result_t tcp_result = connect_to_tcp_server("192.168.1.191", 8080);
 
     if (tcp_result.status != NET_TCP_SUCCESS) {
         ESP_LOGI("TCP", "Failed to associate to TCP server, dying...");
