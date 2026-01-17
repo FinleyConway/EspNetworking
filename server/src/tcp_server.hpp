@@ -99,11 +99,12 @@ private:
     }
 
 private:
+    tcp::acceptor m_acceptor;
+    std::unordered_map<size_t, tcp_connection::pointer> m_connections;
+    asio::io_context m_io_context;
+
     size_t m_connection_count = 0;
     std::function<void(size_t)> m_on_accept_callback;
     std::function<void(const entity_t&)> m_on_receive_callback;
     std::function<void(size_t)> m_on_connection_close_callback;
-    asio::io_context m_io_context;
-    tcp::acceptor m_acceptor;
-    std::unordered_map<size_t, tcp_connection::pointer> m_connections;
 };

@@ -155,14 +155,17 @@ private:
     }
 
 private:
-    bool m_is_client_send_allowed = true;
-    bool m_is_writing = false;
-    bool m_is_reading = false;
-    size_t m_connection_id = 0;
-    std::function<void(const entity_t&)>* m_on_receive_callback = nullptr;
-    std::function<void(size_t)>* m_on_connection_close_callback = nullptr;
     tcp::socket m_socket;
+
     std::deque<net_entity_t> m_write_queue;
     entity_buffer m_write_data;
     entity_buffer m_read_data;
+
+    size_t m_connection_id = 0;
+    std::function<void(const entity_t&)>* m_on_receive_callback = nullptr;
+    std::function<void(size_t)>* m_on_connection_close_callback = nullptr;
+
+    bool m_is_client_send_allowed = true;
+    bool m_is_writing = false;
+    bool m_is_reading = false;
 };
