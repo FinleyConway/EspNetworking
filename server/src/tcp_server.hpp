@@ -36,6 +36,12 @@ public:
         m_on_accept_callback = callback;
     }
 
+    void send(size_t connection_id, const entity_t& entity) {
+        if (m_connections.contains(connection_id)) {
+            m_connections.at(connection_id)->send(entity);
+        }
+    }
+
 private:
     void start_accept() {
         tcp_connection::pointer new_connection = tcp_connection::create(m_io_context);
@@ -55,14 +61,15 @@ private:
             return; 
         }
 
+        m_connections.emplace(m_connection_count, new_connection);
+
         if (m_on_accept_callback) {
             m_on_accept_callback(m_connection_count);
         }
 
-        m_connections.emplace(m_connection_count, new_connection);
         m_connection_count++;
 
-        std::cout << "tcp_server: Connection accepted\n";
+        std::cout << "tcp_server: Connection accepted - ESP: " << m_connection_count << std::endl;
 
         start_accept();
     }

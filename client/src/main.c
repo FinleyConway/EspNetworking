@@ -11,6 +11,7 @@
 #include "wifi_setup.h"
 #include "tcp_setup.h"
 #include "net_status.h"
+#include "entity_io.h"
 
 void sleep_ms(int ms) {
     vTaskDelay(ms / portTICK_PERIOD_MS); // convert ticks to ms
@@ -42,11 +43,25 @@ void app_main(void) {
         return;
     }
 
-    tcp_result_t tcp_result = connect_to_tcp_server("192.168.1.191", 8080);
+    tcp_result_t tcp_result = connect_to_tcp_server("192.168.1.115", 8080);
 
     if (tcp_result.status != NET_TCP_SUCCESS) {
         ESP_LOGI("TCP", "Failed to associate to TCP server, dying...");
     }
 
-    while (1) { sleep_ms(1000); }
+    entity_t entity;
+
+    while (1) 
+    { 
+        ESP_LOGI("Entity", "Recieving...");
+
+        net_status_t s = recv_entity(tcp_result.socket, &entity);
+
+        if (s == NET_TCP_SUCCESS) {
+            ESP_LOGI("Entity", "Entity: id:%lld, is_alive%d\n", entity.id, entity.is_alive);
+        }
+        else {
+            ESP_LOGI("Entity", "Failed");
+        }
+    }
 }

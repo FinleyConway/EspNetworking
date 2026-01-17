@@ -5,6 +5,12 @@
 
 int main() {
     tcp_server server;
+    server.set_on_accept_callback([&](size_t id){
+        server.send(id, {
+            .id = 69,
+            .is_alive = false
+        });
+    });
     server.start_listening(tcp::v4(), 8080);
 
     return 0;
