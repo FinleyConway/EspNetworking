@@ -80,6 +80,6 @@ private:
 private:
     bool m_is_writing = false;
     tcp::socket m_socket;
-    std::deque<const net_entity_t> m_write_queue;
+    std::deque<net_entity_t> m_write_queue;
     entity_buffer m_data;
 };

@@ -4,6 +4,7 @@ project(common LANGUAGES C)
 set(CMAKE_C_STANDARD 17)
 
 add_library(common STATIC
+    src/entity.h
     src/entity.c
 )
 
