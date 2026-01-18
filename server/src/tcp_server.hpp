@@ -11,11 +11,17 @@
 
 using asio::ip::tcp;
 
+/**
+ * TODO: 
+ * - Remove closed connections from m_connection
+ * - Better event system (need a 1 to many (server -> clients) and many to 1 (clients -> server))
+ * - Maybe template this? T and TPacked where T must be X with y functions
+ */
+
 class tcp_server
 {
 public:
-    tcp_server() : m_acceptor(m_io_context)
-    {
+    tcp_server() : m_acceptor(m_io_context) {
     }
     
     void start_listening(const tcp& protocol, uint16_t port) {
