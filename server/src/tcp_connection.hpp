@@ -8,6 +8,7 @@
 #include <asio.hpp>
 
 #include "entity.h"
+#include "tcp_observer.hpp"
 
 using asio::ip::tcp;
 
@@ -19,16 +20,8 @@ private:
 public:
     typedef std::shared_ptr<tcp_connection> pointer;
 
-    static pointer create(
-        asio::io_context& io_context, 
-        std::function<void(const entity_t&)>* on_receive_callback,
-        std::function<void(size_t)>* on_connection_close_callback
-    ) {
-        return pointer(new tcp_connection(
-            io_context, 
-            on_receive_callback,
-            on_connection_close_callback
-        ));
+    static pointer create(asio::io_context& io_context, tcp_observer_base& observer) {
+        return pointer(new tcp_connection(io_context, observer));
     }
 
     tcp::socket& socket() {
@@ -61,21 +54,12 @@ public:
         m_socket.cancel();
         m_socket.close();
 
-        if (m_on_connection_close_callback != nullptr) {
-            (*m_on_connection_close_callback)(m_connection_id);
-        }
+        m_observer.on_client_disconnect(m_connection_id);
     }
 
 private:
-    tcp_connection(
-        asio::io_context& io_context, 
-        std::function<void(const entity_t&)>* on_receive_callback,
-        std::function<void(size_t)>* on_connection_close_callback
-    ) : 
-        m_socket(io_context),
-        m_on_receive_callback(on_receive_callback),
-        m_on_connection_close_callback(on_connection_close_callback)
-    {
+    tcp_connection(asio::io_context& io_context, tcp_observer_base& observer) : 
+        m_socket(io_context), m_observer(observer) {
     }
 
     void write_to() {
@@ -141,16 +125,11 @@ private:
             return;
         }
 
-        if (m_on_receive_callback != nullptr) {
-            net_entity_t net_entity;
+        net_entity_t net_entity;
 
-            std::memcpy(&net_entity, m_read_data.data(), sizeof(net_entity_t));
+        std::memcpy(&net_entity, m_read_data.data(), sizeof(net_entity_t));
 
-            entity_t entity = network_to_host_entity(net_entity);
-            
-            (*m_on_receive_callback)(entity);
-        }
-
+        m_observer.on_receive_from(network_to_host_entity(net_entity));
         m_is_reading = false;
 
         read_from();
@@ -164,8 +143,7 @@ private:
     entity_buffer m_read_data;
 
     size_t m_connection_id = 0;
-    std::function<void(const entity_t&)>* m_on_receive_callback = nullptr;
-    std::function<void(size_t)>* m_on_connection_close_callback = nullptr;
+    tcp_observer_base& m_observer;
 
     bool m_is_client_send_allowed = true;
     bool m_is_writing = false;

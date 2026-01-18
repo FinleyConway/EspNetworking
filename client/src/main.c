@@ -57,6 +57,11 @@ void app_main(void) {
 
         net_status_t rs = recv_entity(tcp_result.socket, &entity);
 
+        if (rs == NET_TCP_CLOSE_CONNECTION) {
+            ESP_LOGI("TCP", "Connection was closed, dying...");
+            break;
+        }
+
         if (rs == NET_TCP_SUCCESS) {
             ESP_LOGI("Entity", "Entity: id:%lld, is_alive:%d\n", entity.id, entity.is_alive);
 

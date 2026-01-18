@@ -8,6 +8,7 @@
 #include <asio.hpp>
 
 #include "tcp_connection.hpp"
+#include "tcp_observer.hpp"
 
 using asio::ip::tcp;
 
@@ -21,7 +22,7 @@ using asio::ip::tcp;
 class tcp_server
 {
 public:
-    tcp_server() : m_acceptor(m_io_context) {
+    tcp_server(tcp_observer_base& observer) : m_acceptor(m_io_context), m_observer(observer) {
     }
     
     void start_listening(const tcp& protocol, uint16_t port) {
@@ -42,6 +43,7 @@ public:
     }
 
     void toggle_read_from_client(bool enable) {
+        // tell every client that the server doesn't/does want to receive 
         for (auto [_, connection] : m_connections) {
             connection->toggle_read_from_client(enable);
         }
@@ -56,25 +58,9 @@ public:
         }
     }
 
-    void set_on_accept_callback(std::function<void(size_t)>&& callback) {
-        m_on_accept_callback = std::move(callback);
-    }
-
-    void set_on_receive_callback(std::function<void(const entity_t&)>&& callback) {
-        m_on_receive_callback = std::move(callback);
-    }
-
-    void set_on_close_connection_callback(std::function<void(size_t)>&& callback) {
-        m_on_connection_close_callback = std::move(callback);
-    }
-
 private:
     void start_accept() {
-        tcp_connection::pointer new_connection = tcp_connection::create(
-            m_io_context,
-            &m_on_receive_callback,
-            &m_on_connection_close_callback
-        );
+        tcp_connection::pointer new_connection = tcp_connection::create(m_io_context, m_observer);
 
         std::cout << "TCP Server: Waiting for more clients\n";
 
@@ -95,18 +81,20 @@ private:
             return; 
         }
         
+        // setup client and keep a ref of it
         new_connection->assign_id(m_connection_count);
         new_connection->toggle_read_from_client(true);
         m_connections.emplace(m_connection_count, new_connection);
 
-        if (m_on_accept_callback) {
-            m_on_accept_callback(m_connection_count);
-        }
+        // notify of connection
+        m_observer.on_client_connect(m_connection_count);
 
+        // increment for next client id
         m_connection_count++;
 
         std::cout << "TCP Server: Connection accepted - ESP: " << m_connection_count << std::endl;
 
+        // check for more client connections
         start_accept();
     }
 
@@ -117,7 +105,5 @@ private:
     std::unordered_map<size_t, tcp_connection::pointer> m_connections;
 
     size_t m_connection_count = 0;
-    std::function<void(size_t)> m_on_accept_callback;
-    std::function<void(const entity_t&)> m_on_receive_callback;
-    std::function<void(size_t)> m_on_connection_close_callback;
+    tcp_observer_base& m_observer;
 };
