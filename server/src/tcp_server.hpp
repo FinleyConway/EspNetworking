@@ -23,6 +23,7 @@ class tcp_server
 {
 public:
     tcp_server(tcp_observer_base& observer) : m_acceptor(m_io_context), m_observer(observer) {
+        m_observer.set_tcp_server(this);
     }
     
     void start_listening(const tcp& protocol, uint16_t port) {
