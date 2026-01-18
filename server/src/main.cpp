@@ -14,11 +14,11 @@ int main() {
     });
 
     server.set_on_receive_callback([&](const entity_t& entity) {
-        printf("Entity Recieved: id: %ull, is_alive: %d\n");
+        printf("Entity Recieved: id: %zu, is_alive: %d\n", entity.id, entity.is_alive);
     });
 
     server.set_on_close_connection_callback([&](size_t id) {
-        printf("Connection id lost: %ull", id);
+        printf("Connection id lost: %zu", id);
     });
 
     server.start_listening(tcp::v4(), 8080);

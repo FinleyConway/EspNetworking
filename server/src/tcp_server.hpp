@@ -26,9 +26,12 @@ public:
     
     void start_listening(const tcp& protocol, uint16_t port) {
         m_acceptor.open(protocol);
+        m_acceptor.set_option(tcp::acceptor::reuse_address(true));
         m_acceptor.bind(tcp::endpoint(protocol, port));
         m_acceptor.listen();
         
+        std::cout << "TCP Server: Starting to listen for clients\n";
+
         start_accept();
 
         m_io_context.run();
@@ -73,6 +76,8 @@ private:
             &m_on_connection_close_callback
         );
 
+        std::cout << "TCP Server: Waiting for more clients\n";
+
         m_acceptor.async_accept(
             new_connection->socket(), 
             std::bind(
@@ -91,6 +96,7 @@ private:
         }
         
         new_connection->assign_id(m_connection_count);
+        new_connection->toggle_read_from_client(true);
         m_connections.emplace(m_connection_count, new_connection);
 
         if (m_on_accept_callback) {
@@ -99,15 +105,16 @@ private:
 
         m_connection_count++;
 
-        std::cout << "tcp_server: Connection accepted - ESP: " << m_connection_count << std::endl;
+        std::cout << "TCP Server: Connection accepted - ESP: " << m_connection_count << std::endl;
 
         start_accept();
     }
 
 private:
-    tcp::acceptor m_acceptor;
-    std::unordered_map<size_t, tcp_connection::pointer> m_connections;
     asio::io_context m_io_context;
+    tcp::acceptor m_acceptor;
+
+    std::unordered_map<size_t, tcp_connection::pointer> m_connections;
 
     size_t m_connection_count = 0;
     std::function<void(size_t)> m_on_accept_callback;

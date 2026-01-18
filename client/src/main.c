@@ -55,13 +55,28 @@ void app_main(void) {
     { 
         ESP_LOGI("Entity", "Recieving...");
 
-        net_status_t s = recv_entity(tcp_result.socket, &entity);
+        net_status_t rs = recv_entity(tcp_result.socket, &entity);
 
-        if (s == NET_TCP_SUCCESS) {
-            ESP_LOGI("Entity", "Entity: id:%lld, is_alive%d\n", entity.id, entity.is_alive);
+        if (rs == NET_TCP_SUCCESS) {
+            ESP_LOGI("Entity", "Entity: id:%lld, is_alive:%d\n", entity.id, entity.is_alive);
+
+            entity_t s_entity = {
+                .id = 1234,
+                .is_alive = true
+            };
+
+            net_status_t ss = send_entity(tcp_result.socket, s_entity);
+
+            if (ss == NET_TCP_SUCCESS) {
+                ESP_LOGI("Entity", "Successful send");
+                ESP_LOGI("Entity", "Entity: id:%lld, is_alive:%d\n", s_entity.id, s_entity.is_alive);
+            }
+            else {
+                ESP_LOGI("Entity", "Failed send");
+            }
         }
         else {
-            ESP_LOGI("Entity", "Failed");
+            ESP_LOGI("Entity", "Failed recieved");
         }
     }
 }

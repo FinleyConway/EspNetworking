@@ -146,7 +146,9 @@ private:
 
             std::memcpy(&net_entity, m_read_data.data(), sizeof(net_entity_t));
 
-            (*m_on_receive_callback)(network_to_host_entity(net_entity));
+            entity_t entity = network_to_host_entity(net_entity);
+            
+            (*m_on_receive_callback)(entity);
         }
 
         m_is_reading = false;
