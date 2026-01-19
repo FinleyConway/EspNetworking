@@ -69,7 +69,7 @@ void reset_esp_on_button(void* parameters) {
 }
 
 void recv_entity_from_server(void* parameters) {
-    tcp_result_t tcp_result = connect_to_tcp_server("192.168.1.191", 8080);
+    tcp_result_t tcp_result = connect_to_tcp_server("192.168.1.115", 8080);
 
     if (tcp_result.status == NET_TCP_FAILURE) {
         ESP_LOGI("TCP", "Failed to associate to TCP server, dying...");

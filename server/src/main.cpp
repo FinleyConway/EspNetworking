@@ -15,24 +15,19 @@ public:
     }
 
     void on_receive_from(const entity_t& entity) override {
-        printf("Entity Recieved: id: %d, is_restarting: %d\n", entity.esp_id, entity.is_restarting);
-
         if (entity.is_restarting) {
             get_tcp_server()->disconnect_client_by(entity.esp_id);
         }
     }
 
     void on_client_disconnect(uint16_t client_id) override {
-        printf("Client %d disconnected\n", client_id);
     }
 }; 
 
 /**
  * TODO: 
- * - Handle esp re-assign if the esp is just restarting? take advantage of esp_restet_reason()?
  * - More meaningful data i/o
  * - Start non headless server?
- * - Better Logging
  * - Rename entity to better name
  */
 

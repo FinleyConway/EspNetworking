@@ -8,6 +8,7 @@
 
 #include <asio.hpp>
 
+#include "logger.hpp"
 #include "tcp_connection.hpp"
 #include "tcp_client_observer.hpp"
 
@@ -17,6 +18,7 @@ class tcp_server
 {
 public:
     tcp_server(tcp_client_observer_base& observer) : m_acceptor(m_io_context), m_observer(observer) {
+        Logger::init();
         m_observer.set_tcp_server(this);
     }
     
@@ -26,7 +28,7 @@ public:
         m_acceptor.bind(tcp::endpoint(protocol, port));
         m_acceptor.listen();
         
-        std::cout << "TCP Server: Starting to listen for clients\n";
+        LOG_INFO("Starting to accept new clients.");
 
         start_accept();
 
@@ -34,10 +36,14 @@ public:
     }
 
     void stop_listening() {
+        LOG_INFO("Stopped accepting clients.");
+
         m_acceptor.close();
     }
 
     void toggle_read_from_client(bool enable) {
+        LOG_INFO("Listening to clients has {}.", enable ? "started" : "stopped");
+
         // tell every client that the server doesn't/does want to receive 
         for (auto [_, connection] : m_connections) {
             connection->toggle_read_from_client(enable);
@@ -45,11 +51,13 @@ public:
     }
 
     void send_to_client_by(uint16_t client_id, const entity_t& entity) {
+        LOG_INFO("Sending to clients {}.", client_id);
+
         if (m_connections.contains(client_id)) {
             m_connections.at(client_id)->send_to_client(entity);
         }
         else {
-            std::cout << "Client ID not found: " << client_id << std::endl;
+            LOG_ERROR("Failed to send to client as client {} was not found!", client_id);
         }
     }
 
@@ -58,7 +66,7 @@ public:
             m_connections.at(client_id)->close_connection();
         }
         else {
-            std::cout << "Client ID not found: " << client_id << std::endl;
+            LOG_ERROR("Failed to disconnect client as client {} was not found!", client_id);
         }
     }
 
@@ -70,7 +78,7 @@ private:
             std::bind(&tcp_server::handle_client_disconnect, this, std::placeholders::_1)
         );
 
-        std::cout << "TCP Server: Waiting for more clients\n";
+        LOG_INFO("Listening for clients connections...");
 
         m_acceptor.async_accept(
             new_connection->socket(), 
@@ -85,7 +93,7 @@ private:
 
     void handle_accept(tcp_connection::pointer new_connection, const std::error_code& error) {
         if (error) {
-            std::cout << "handle_accept error: " + error.message() << std::endl;
+            LOG_WARN("Accepting incoming client failed: {}", error.message());
             return; 
         }
         
@@ -97,7 +105,7 @@ private:
         // notify of connection
         m_observer.on_client_connect(m_connection_count);
 
-        std::cout << "TCP Server: Connection accepted - ESP: " << m_connection_count << std::endl;
+        LOG_INFO("Connection accepted: ESP {} connected", m_connection_count);
 
         // increment for next client id
         m_connection_count++;
@@ -109,7 +117,7 @@ private:
     void handle_client_disconnect(uint16_t client_id) {
         assert(m_connections.contains(client_id) && "Trying to handle a client that doesn't exist!\n");
 
-        std::cout << "TCP Server: Client Removed - ID: " << client_id << std::endl;
+        LOG_INFO("Client {} disconnected", client_id);
 
         m_connections.erase(client_id);
     }

@@ -8,6 +8,7 @@
 #include <asio.hpp>
 
 #include "entity.h"
+#include "logger.hpp"
 #include "tcp_client_observer.hpp"
 
 using asio::ip::tcp;
@@ -110,7 +111,8 @@ private:
         if (!m_socket.is_open()) return; // prevent unwanted errors/writes if socket closed
 
         if (error) {
-            std::cerr << "Write failed: " << error.message() << "\n";
+            LOG_WARN("Failed to send: {}", error.message());
+
             close_connection();
 
             return;
@@ -126,7 +128,8 @@ private:
         if (!m_socket.is_open()) return; // prevent unwanted errors/reads if socket closed
 
         if (error) {
-            std::cerr << "Read failed: " << error.message() << "\n";
+            LOG_WARN("Failed to read: {}", error.message());
+
             close_connection();
 
             return;
