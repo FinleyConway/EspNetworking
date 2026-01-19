@@ -1,7 +1,7 @@
 #include <thread>
 
-#include "tcp_server.hpp"
-#include "tcp_client_observer.hpp"
+#include "networking/tcp_server.hpp"
+#include "networking/tcp_client_observer.hpp"
 
 // REF: https://think-async.com/Asio/asio-1.36.0/doc/asio/tutorial/tutdaytime3.html
 // REF: https://github.com/alejandrofsevilla/boost-tcp-server-client 

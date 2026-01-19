@@ -7,23 +7,23 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_subdirectory(vendors/spdlog)
 add_subdirectory(common)
 
-add_executable(server_headless
-    server/src/main.cpp
-    server/src/logger.hpp
-    server/src/tcp_server.hpp
-    server/src/tcp_client_observer.hpp
-    server/src/tcp_connection.hpp
+add_executable(esp_networking
+    server_gui/src/main.cpp
+    server_gui/src/networking/tcp_logger.hpp
+    server_gui/src/networking/tcp_server.hpp
+    server_gui/src/networking/tcp_client_observer.hpp
+    server_gui/src/networking/tcp_connection.hpp
 )
 
-target_include_directories(server_headless PRIVATE
+target_include_directories(esp_networking PRIVATE
     ${CMAKE_SOURCE_DIR}/vendors/asio-1.36.0/include
 )
 
-target_compile_definitions(server_headless PRIVATE
+target_compile_definitions(esp_networking PRIVATE
     ASIO_STANDALONE
 )
 
-target_link_libraries(server_headless PRIVATE
+target_link_libraries(esp_networking PRIVATE
     spdlog::spdlog_header_only
     common
 )

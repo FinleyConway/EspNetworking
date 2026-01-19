@@ -8,7 +8,7 @@
 #include <asio.hpp>
 
 #include "esp_info.h"
-#include "logger.hpp"
+#include "tcp_logger.hpp"
 #include "tcp_client_observer.hpp"
 
 using asio::ip::tcp;

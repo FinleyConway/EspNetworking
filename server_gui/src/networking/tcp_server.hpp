@@ -7,7 +7,7 @@
 
 #include <asio.hpp>
 
-#include "logger.hpp"
+#include "tcp_logger.hpp"
 #include "tcp_connection.hpp"
 #include "tcp_client_observer.hpp"
 
