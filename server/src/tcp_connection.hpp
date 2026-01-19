@@ -8,7 +8,7 @@
 #include <asio.hpp>
 
 #include "entity.h"
-#include "tcp_observer.hpp"
+#include "tcp_client_observer.hpp"
 
 using asio::ip::tcp;
 
@@ -20,15 +20,15 @@ private:
 public:
     typedef std::shared_ptr<tcp_connection> pointer;
 
-    static pointer create(asio::io_context& io_context, tcp_observer_base& observer) {
-        return pointer(new tcp_connection(io_context, observer));
+    static pointer create(asio::io_context& io_context, tcp_client_observer_base& observer, std::function<void(uint16_t)>&& notify_server_disconnection) {
+        return pointer(new tcp_connection(io_context, observer, std::move(notify_server_disconnection)));
     }
 
     tcp::socket& socket() {
         return m_socket;
     }
 
-    void assign_id(size_t id) {
+    void assign_id(uint16_t id) {
         m_connection_id = id;
     }
 
@@ -51,15 +51,18 @@ public:
     }
 
     void close_connection() {
+        if (!m_socket.is_open()) return;
+        
         m_socket.cancel();
         m_socket.close();
 
         m_observer.on_client_disconnect(m_connection_id);
+        m_notify_server_disconnection(m_connection_id);
     }
 
 private:
-    tcp_connection(asio::io_context& io_context, tcp_observer_base& observer) : 
-        m_socket(io_context), m_observer(observer) {
+    tcp_connection(asio::io_context& io_context, tcp_client_observer_base& observer, std::function<void(uint16_t)>&& notify_server_disconnection) : 
+        m_socket(io_context), m_observer(observer), m_notify_server_disconnection(std::move(notify_server_disconnection)) {
     }
 
     void write_to() {
@@ -104,6 +107,8 @@ private:
     }
 
     void handle_write(const std::error_code& error) {
+        if (!m_socket.is_open()) return; // prevent unwanted errors/writes if socket closed
+
         if (error) {
             std::cerr << "Write failed: " << error.message() << "\n";
             close_connection();
@@ -118,6 +123,8 @@ private:
     }
 
     void handle_read(const std::error_code& error) {
+        if (!m_socket.is_open()) return; // prevent unwanted errors/reads if socket closed
+
         if (error) {
             std::cerr << "Read failed: " << error.message() << "\n";
             close_connection();
@@ -142,8 +149,9 @@ private:
     entity_buffer m_write_data;
     entity_buffer m_read_data;
 
-    size_t m_connection_id = 0;
-    tcp_observer_base& m_observer;
+    uint16_t m_connection_id = 0;
+    tcp_client_observer_base& m_observer;
+    std::function<void(uint16_t)> m_notify_server_disconnection;
 
     bool m_is_client_send_allowed = true;
     bool m_is_writing = false;

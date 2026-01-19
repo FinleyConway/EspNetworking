@@ -4,25 +4,19 @@
 #include <iostream> // prolly want better logging
 #include <cstdint>
 #include <functional>
+#include <cassert>
 
 #include <asio.hpp>
 
 #include "tcp_connection.hpp"
-#include "tcp_observer.hpp"
+#include "tcp_client_observer.hpp"
 
 using asio::ip::tcp;
-
-/**
- * TODO: 
- * - Remove closed connections from m_connection
- * - Better event system (need a 1 to many (server -> clients) and many to 1 (clients -> server))
- * - Maybe template this? T and TPacked where T must be X with y functions
- */
 
 class tcp_server
 {
 public:
-    tcp_server(tcp_observer_base& observer) : m_acceptor(m_io_context), m_observer(observer) {
+    tcp_server(tcp_client_observer_base& observer) : m_acceptor(m_io_context), m_observer(observer) {
         m_observer.set_tcp_server(this);
     }
     
@@ -50,18 +44,31 @@ public:
         }
     }
 
-    void send_to_client_by(size_t connection_id, const entity_t& entity) {
-        if (m_connections.contains(connection_id)) {
-            m_connections.at(connection_id)->send_to_client(entity);
+    void send_to_client_by(uint16_t client_id, const entity_t& entity) {
+        if (m_connections.contains(client_id)) {
+            m_connections.at(client_id)->send_to_client(entity);
         }
         else {
-            std::cout << "Connection ID not found: " << connection_id << std::endl;
+            std::cout << "Client ID not found: " << client_id << std::endl;
+        }
+    }
+
+    void disconnect_client_by(uint16_t client_id) {
+        if (m_connections.contains(client_id)) {
+            m_connections.at(client_id)->close_connection();
+        }
+        else {
+            std::cout << "Client ID not found: " << client_id << std::endl;
         }
     }
 
 private:
     void start_accept() {
-        tcp_connection::pointer new_connection = tcp_connection::create(m_io_context, m_observer);
+        tcp_connection::pointer new_connection = tcp_connection::create(
+            m_io_context,
+            m_observer,
+            std::bind(&tcp_server::handle_client_disconnect, this, std::placeholders::_1)
+        );
 
         std::cout << "TCP Server: Waiting for more clients\n";
 
@@ -90,21 +97,29 @@ private:
         // notify of connection
         m_observer.on_client_connect(m_connection_count);
 
+        std::cout << "TCP Server: Connection accepted - ESP: " << m_connection_count << std::endl;
+
         // increment for next client id
         m_connection_count++;
 
-        std::cout << "TCP Server: Connection accepted - ESP: " << m_connection_count << std::endl;
-
         // check for more client connections
         start_accept();
+    }
+
+    void handle_client_disconnect(uint16_t client_id) {
+        assert(m_connections.contains(client_id) && "Trying to handle a client that doesn't exist!\n");
+
+        std::cout << "TCP Server: Client Removed - ID: " << client_id << std::endl;
+
+        m_connections.erase(client_id);
     }
 
 private:
     asio::io_context m_io_context;
     tcp::acceptor m_acceptor;
 
-    std::unordered_map<size_t, tcp_connection::pointer> m_connections;
+    std::unordered_map<uint16_t, tcp_connection::pointer> m_connections;
 
-    size_t m_connection_count = 0;
-    tcp_observer_base& m_observer;
+    uint16_t m_connection_count = 1; // start at 1 to allow 0 to be error
+    tcp_client_observer_base& m_observer;
 };

@@ -7,14 +7,14 @@
 
 class tcp_server;
 
-class tcp_observer_base 
+class tcp_client_observer_base 
 {
 public:
-    virtual ~tcp_observer_base() = default;
+    virtual ~tcp_client_observer_base() = default;
 
-    virtual void on_client_connect(size_t client_id) = 0;
+    virtual void on_client_connect(uint16_t client_id) = 0;
     virtual void on_receive_from(const entity_t& entity) = 0;
-    virtual void on_client_disconnect(size_t client_id) = 0;
+    virtual void on_client_disconnect(uint16_t client_id) = 0;
 
 protected:
     tcp_server* get_tcp_server() const {

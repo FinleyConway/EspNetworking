@@ -2,6 +2,7 @@
 
 #include <esp_wifi.h>
 #include <esp_log.h>
+#include <esp_err.h>
 
 #include "wifi_creds.h"
 
@@ -126,4 +127,9 @@ net_status_t connect_to_wifi(void)
     vEventGroupDelete(s_wifi_event_group);
 
     return status;
+}
+
+void shutdown_wifi(void) {
+    ESP_ERROR_CHECK(esp_wifi_stop());
+    ESP_ERROR_CHECK(esp_wifi_deinit());
 }

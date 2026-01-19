@@ -9,3 +9,5 @@
 static const char* WIFI_LOG_TAG = "WIFI"; // wifi logging tag
 
 net_status_t connect_to_wifi(void);
+
+void shutdown_wifi(void);

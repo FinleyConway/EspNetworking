@@ -4,8 +4,8 @@
 
 net_entity_t host_to_network_entity(entity_t entity) {
     net_entity_t net_entity = {
-        .id = htobe64(entity.id), // convert endians for network (swap byte sequence)
-        .is_alive = entity.is_alive, // not needed for byte since swapping byte is the name
+        .esp_id = htobe16(entity.esp_id), 
+        .is_restarting = entity.is_restarting, 
     };
 
     return net_entity;
@@ -13,8 +13,8 @@ net_entity_t host_to_network_entity(entity_t entity) {
 
 entity_t network_to_host_entity(net_entity_t net_entity) {
     entity_t e = {
-        .id = be64toh(net_entity.id), // convert endians for host (swap byte sequence)
-        .is_alive = net_entity.is_alive,
+        .esp_id = be16toh(net_entity.esp_id),
+        .is_restarting = net_entity.is_restarting,
     };
 
     return e;
