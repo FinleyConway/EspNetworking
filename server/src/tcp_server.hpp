@@ -50,7 +50,7 @@ public:
         }
     }
 
-    void send_to_client_by(uint16_t client_id, const entity_t& entity) {
+    void send_to_client_by(uint16_t client_id, const esp_info_t& entity) {
         LOG_INFO("Sending to clients {}.", client_id);
 
         if (m_connections.contains(client_id)) {
@@ -68,6 +68,13 @@ public:
         else {
             LOG_ERROR("Failed to disconnect client as client {} was not found!", client_id);
         }
+    }
+
+    void close() {
+        stop_listening();
+        m_io_context.stop();
+
+        LOG_INFO("Shutting down.");
     }
 
 private:

@@ -16,7 +16,7 @@ using asio::ip::tcp;
 class tcp_connection : public std::enable_shared_from_this<tcp_connection>
 {
 private:
-    typedef std::array<uint8_t, sizeof(net_entity_t)> entity_buffer;
+    typedef std::array<uint8_t, sizeof(net_esp_info_t)> entity_buffer;
 
 public:
     typedef std::shared_ptr<tcp_connection> pointer;
@@ -41,7 +41,7 @@ public:
         }
     }
 
-    void send_to_client(const entity_t& entity) {
+    void send_to_client(const esp_info_t& entity) {
         // add entity to sending queue
         m_write_queue.emplace_back(host_to_network_entity(entity));
 
@@ -74,10 +74,10 @@ private:
 
         // get the current entity to send
         m_is_writing = true;
-        const net_entity_t& net_entity = m_write_queue.front();
+        const net_esp_info_t& net_entity = m_write_queue.front();
 
         // copy packed data to a buffer and send
-        std::memcpy(m_write_data.data(), &net_entity, sizeof(net_entity_t)); 
+        std::memcpy(m_write_data.data(), &net_entity, sizeof(net_esp_info_t)); 
         
         asio::async_write(
             m_socket, 
@@ -135,9 +135,9 @@ private:
             return;
         }
 
-        net_entity_t net_entity;
+        net_esp_info_t net_entity;
 
-        std::memcpy(&net_entity, m_read_data.data(), sizeof(net_entity_t));
+        std::memcpy(&net_entity, m_read_data.data(), sizeof(net_esp_info_t));
 
         m_observer.on_receive_from(network_to_host_entity(net_entity));
         m_is_reading = false;
@@ -148,7 +148,7 @@ private:
 private:
     tcp::socket m_socket;
 
-    std::deque<net_entity_t> m_write_queue;
+    std::deque<net_esp_info_t> m_write_queue;
     entity_buffer m_write_data;
     entity_buffer m_read_data;
 

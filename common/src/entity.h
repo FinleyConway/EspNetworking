@@ -10,16 +10,18 @@ extern "C" {
 // no padding occurs so bytes are as presented 
 typedef struct __attribute__((packed)) { 
     uint16_t esp_id;
+    int8_t is_led_on;
     int8_t is_restarting;
-} net_entity_t;
+} net_esp_info_t;
 
 typedef struct {
     uint16_t esp_id;
+    int8_t is_led_on;
     int8_t is_restarting;
-} entity_t;
+} esp_info_t;
 
-net_entity_t host_to_network_entity(entity_t entity);
-entity_t network_to_host_entity(net_entity_t net_entity);
+net_esp_info_t host_to_network_entity(esp_info_t entity);
+esp_info_t network_to_host_entity(net_esp_info_t net_entity);
 
 #ifdef __cplusplus
 }

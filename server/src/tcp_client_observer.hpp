@@ -13,7 +13,7 @@ public:
     virtual ~tcp_client_observer_base() = default;
 
     virtual void on_client_connect(uint16_t client_id) = 0;
-    virtual void on_receive_from(const entity_t& entity) = 0;
+    virtual void on_receive_from(const esp_info_t& entity) = 0;
     virtual void on_client_disconnect(uint16_t client_id) = 0;
 
 protected:

@@ -17,7 +17,11 @@
 #define RESET_BUTTON_PIN 13
 
 int socket = 0;
-entity_t entity;
+esp_info_t entity;
+
+bool has_server_conformation() {
+    return entity.esp_id > 0;
+}
 
 void sleep_ms(uint32_t ms) {
     vTaskDelay(pdMS_TO_TICKS(ms));
@@ -37,7 +41,7 @@ void init_flash_storage() {
 
 void try_notify_server_on_reset() {
      // this is created to avoid changes due to multiple tasks running
-    entity_t reset_entity = {
+    esp_info_t reset_entity = {
         .esp_id = entity.esp_id,
         .is_restarting = true
     };
@@ -85,6 +89,10 @@ void recv_entity_from_server(void* parameters) {
 
         if (status == NET_TCP_SUCCESS) {
             ESP_LOGI("TCP", "Recv: esp_id: %d, is_restarting: %d", entity.esp_id, entity.is_restarting);
+
+            if (has_server_conformation()) {
+                gpio_set_level(LED_PIN, entity.is_led_on);
+            }
         }
         else if (status == NET_TCP_CLOSE_CONNECTION) {
             ESP_LOGI("TCP", "Connection closed, dying...");
@@ -99,10 +107,6 @@ void recv_entity_from_server(void* parameters) {
 
         //ESP_LOGI("STACK", "recv_entity_from_server stack use: %d", uxTaskGetStackHighWaterMark(NULL));
     }
-}
-
-bool has_server_conformation() {
-    return entity.esp_id > 0;
 }
 
 void app_main(void) {
