@@ -54,8 +54,14 @@ public:
     void close_connection() {
         if (!m_socket.is_open()) return;
         
-        m_socket.cancel();
-        m_socket.close();
+        try {
+            m_socket.cancel();
+            m_socket.close();
+        }
+        catch (const std::exception &e) {
+            LOG_ERROR("Failed to close socket: ", e.what());
+            return;
+        } 
 
         m_observer.on_client_disconnect(m_connection_id);
         m_notify_server_disconnection(m_connection_id);

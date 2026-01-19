@@ -23,10 +23,17 @@ public:
     }
     
     void start_listening(const tcp& protocol, uint16_t port) {
-        m_acceptor.open(protocol);
-        m_acceptor.set_option(tcp::acceptor::reuse_address(true));
-        m_acceptor.bind(tcp::endpoint(protocol, port));
-        m_acceptor.listen();
+        try {
+            m_acceptor.open(protocol);
+            m_acceptor.set_option(tcp::acceptor::reuse_address(true));
+            m_acceptor.bind(tcp::endpoint(protocol, port));
+            m_acceptor.listen();
+        }
+        catch (const std::exception &e) {
+            LOG_ERROR("Failed to start accepting clients: {}", e.what());
+
+            return;
+        }
         
         LOG_INFO("Starting to accept new clients.");
 
