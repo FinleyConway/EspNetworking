@@ -17,9 +17,9 @@ public:
         });
     }
 
-    void on_receive_from(const esp_info_t& entity) override {
-        if (entity.is_restarting) {
-            get_tcp_server()->disconnect_client_by(entity.esp_id);
+    void on_receive_from(const esp_info_t& esp_info) override {
+        if (esp_info.is_restarting) {
+            get_tcp_server()->disconnect_client_by(esp_info.esp_id);
         }
     }
 

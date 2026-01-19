@@ -1,9 +1,8 @@
 #pragma once
 
 #include <unordered_map>
-#include <iostream> // prolly want better logging
-#include <cstdint>
 #include <functional>
+#include <cstdint>
 #include <cassert>
 
 #include <asio.hpp>
@@ -57,11 +56,11 @@ public:
         }
     }
 
-    void send_to_client_by(uint16_t client_id, const esp_info_t& entity) {
+    void send_to_client_by(uint16_t client_id, const esp_info_t& esp_info) {
         LOG_INFO("Sending to clients {}.", client_id);
 
         if (m_connections.contains(client_id)) {
-            m_connections.at(client_id)->send_to_client(entity);
+            m_connections.at(client_id)->send_to_client(esp_info);
         }
         else {
             LOG_ERROR("Failed to send to client as client {} was not found!", client_id);
