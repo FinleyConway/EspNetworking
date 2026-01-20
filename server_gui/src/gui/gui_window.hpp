@@ -10,9 +10,22 @@
 #include "../networking/tcp_server.hpp"
 #include "../networking/tcp_logger.hpp"
 
+/*
+colours = { 
+    rgb(4, 12, 6), 
+    rgb(17, 35, 24), 
+    rgb(30, 58, 41), 
+    rgb(48, 93, 66), 
+    rgb(77, 128, 97), 
+    rgb(137, 162, 87), 
+    rgb(190, 220, 127), 
+    rgb(238, 255, 204) 
+}
+*/
+
 struct esp_32 {
     uint16_t esp_id = 0;
-    std::string name;
+    char name[20];
 };
 
 class gui_window : public tcp_client_observer_base
@@ -49,6 +62,8 @@ public:
         auto* screen = ImTui_ImplNcurses_Init(true);
         ImTui_ImplText_Init();
 
+        apply_theme();
+
         while (m_running) {
             ImTui_ImplNcurses_NewFrame();
             ImTui_ImplText_NewFrame();
@@ -75,6 +90,73 @@ private:
         create_console_window(display_size, dashboard_size.y);
     }
 
+    void apply_theme() {
+        ImGuiStyle& style = ImGui::GetStyle();
+
+        auto col = [](int r, int g, int b) { return ImVec4(r/255.0f, g/255.0f, b/255.0f, 1.0f); };
+        auto c = style.Colors;
+
+        // Core colors
+        c[ImGuiCol_Text] = col(220, 220, 220);       // light gray
+        c[ImGuiCol_TextDisabled] = col(130, 130, 130);
+
+        c[ImGuiCol_WindowBg] = col(18, 18, 18);      // dark background
+        c[ImGuiCol_ChildBg] = col(20, 20, 20);
+        c[ImGuiCol_PopupBg] = col(25, 25, 25);
+
+        c[ImGuiCol_Border] = col(50, 20, 20);
+        c[ImGuiCol_BorderShadow] = col(0, 0, 0);
+
+        // Base dark reds
+        ImVec4 red_dark   = col(60, 20, 20);  
+        ImVec4 red_active = col(80, 20, 20);  
+        ImVec4 red_normal = col(100, 20, 20); 
+        
+        // Frames / Inputs
+        c[ImGuiCol_FrameBg] = red_dark;
+        c[ImGuiCol_FrameBgHovered] = red_normal;
+        c[ImGuiCol_FrameBgActive] = red_active;
+
+        // Buttons
+        c[ImGuiCol_Button] = red_dark;
+        c[ImGuiCol_ButtonHovered] = red_normal;
+        c[ImGuiCol_ButtonActive] = red_active;
+
+        // Headers
+        c[ImGuiCol_Header] = red_dark;
+        c[ImGuiCol_HeaderHovered] = red_normal;
+        c[ImGuiCol_HeaderActive] = red_active;
+
+        // Tabs
+        c[ImGuiCol_Tab] = red_dark;
+        c[ImGuiCol_TabHovered] = red_normal;
+        c[ImGuiCol_TabActive] = red_active;
+        c[ImGuiCol_TabUnfocused] = col(25, 25, 25);
+        c[ImGuiCol_TabUnfocusedActive] = red_dark;
+
+        // Tables
+        c[ImGuiCol_TableHeaderBg] = red_dark;
+        c[ImGuiCol_TableRowBg] = col(20, 20, 20);
+        c[ImGuiCol_TableRowBgAlt] = col(25, 25, 25);
+        c[ImGuiCol_TableBorderStrong] = red_normal;
+        c[ImGuiCol_TableBorderLight] = red_dark;
+
+        // Scrollbar
+        c[ImGuiCol_ScrollbarBg] = col(18, 18, 18);
+        c[ImGuiCol_ScrollbarGrab] = red_dark;
+        c[ImGuiCol_ScrollbarGrabHovered] = red_normal;
+        c[ImGuiCol_ScrollbarGrabActive] = red_active;
+
+        // Selection / Navigation
+        c[ImGuiCol_TextSelectedBg] = red_normal;
+        c[ImGuiCol_NavHighlight] = red_active;
+
+        // ---- Window title bar ----
+        c[ImGuiCol_TitleBg] = red_dark;          
+        c[ImGuiCol_TitleBgActive] = red_dark;   
+
+    }
+
     void create_dashboard_window(ImVec2 display_size, ImVec2 dashboard_pos, ImVec2 dashboard_size) {
         ImGui::SetNextWindowPos(dashboard_pos);
         ImGui::SetNextWindowSize(dashboard_size);
@@ -91,10 +173,32 @@ private:
             {
                 ImGui::EndTabItem();
             }
-            if (ImGui::BeginTabItem("Connect"))
-            {
+
+            if (ImGui::BeginTabItem("Connected"))
+            {   
+                if (ImGui::BeginTable("Connected ESPs", 2, ImGuiTableFlags_Borders)) {
+                    ImGui::TableSetupColumn("ID");
+                    ImGui::TableSetupColumn("Name");
+                    ImGui::TableHeadersRow();
+
+                    for (auto& esp : m_connected_esps) {
+                        ImGui::TableNextRow();                             
+
+                        ImGui::PushID(esp.esp_id);
+                        ImGui::TableSetColumnIndex(0);
+                        ImGui::Text("%d", esp.esp_id);
+
+                        ImGui::TableSetColumnIndex(1);
+                        ImGui::InputText("##name", esp.name, IM_ARRAYSIZE(esp.name));
+                        ImGui::PopID();
+                    }
+
+                    ImGui::EndTable();
+                }   
+
                 ImGui::EndTabItem();
             }
+
             ImGui::EndTabBar();
         }
 
