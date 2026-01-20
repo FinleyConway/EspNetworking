@@ -1,6 +1,8 @@
 #include "tcp_handler.h"
 
+#include <sys/types.h>
 #include <sys/socket.h>
+#include <netdb.h>
 
 #include <esp_log.h>
 
@@ -21,32 +23,36 @@ typedef struct {
     net_status_t status;
 } tcp_result_t;
 
-tcp_result_t connect_to_tcp_server(const char* address, uint16_t port) {
+tcp_result_t connect_to_tcp_server(const char* address, const char* port) {
     tcp_result_t result = { .socket = -1, .status = NET_TCP_FAILURE };
-    int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
+    
+    struct addrinfo hints = {
+        .ai_family = AF_INET,
+        .ai_socktype = SOCK_STREAM
+    };
+    struct addrinfo* res;
+    int error = getaddrinfo(address, port, &hints, &res);
+    
+    if (error == 0) {
+        int socket_fd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
 
-    if (socket_fd < 0) {
-        ESP_LOGE(TCP_LOG_TAG, "Failed to create a socket");
+        if (socket_fd < 0) {
+            ESP_LOGE(TCP_LOG_TAG, "Failed to create a socket");
 
-        return result;
+            return result;
+        }
+
+        if (connect(socket_fd, res->ai_addr, res->ai_addrlen) < 0) {
+            ESP_LOGE(TCP_LOG_TAG, "Failed to connect to server");
+
+            close(socket_fd);
+
+            return result;
+        }
+
+        result.socket = socket_fd;
+        result.status = NET_TCP_SUCCESS;
     }
-
-    struct sockaddr_in server_address = {
-        .sin_family = AF_INET,
-        .sin_port = htons(port),
-        .sin_addr.s_addr = inet_addr(address)
-    }; 
-
-    if (connect(socket_fd, (struct sockaddr*)&server_address, sizeof(server_address)) < 0) {
-        ESP_LOGE(TCP_LOG_TAG, "Failed to connect to server");
-
-        close(socket_fd);
-
-        return result;
-    }
-
-    result.socket = socket_fd;
-    result.status = NET_TCP_SUCCESS;
 
     return result;
 }

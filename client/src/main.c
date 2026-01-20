@@ -47,9 +47,11 @@ void app_main(void) {
         return;
     }
 
+    // lesser hard coded? atleast both my pc and laptop have hostname fedora
+    // sudo systemctl start avahi-daemon.socket avahi-daemon.service
     tcp_config_t tcp_config = {
-        .ip_address = "192.168.1.115",
-        .port = 8080
+        .ip_address = "fedora.local",
+        .port = "8080"
     };
     xTaskCreate(receive_from_tcp_server, "SERVER_SEND", 8192, &tcp_config, 1, NULL);
     xTaskCreate(reset_esp_on_button, "ESP_RESET", 2048, NULL, 1, NULL);

@@ -37,9 +37,10 @@ public:
 
     void on_client_disconnect(uint16_t client_id) override {
         // remove disconnected esps
-        std::remove_if(m_connected_esps.begin(), m_connected_esps.end(), [&](const esp_32& esp_32) {
+        auto found = std::remove_if(m_connected_esps.begin(), m_connected_esps.end(), [&](const esp_32& esp_32) {
             return esp_32.esp_id == client_id;
         });
+        m_connected_esps.erase(found);
     }
 
     void run() {

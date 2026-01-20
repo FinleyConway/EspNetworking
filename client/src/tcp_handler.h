@@ -6,7 +6,7 @@
 
 typedef struct {
     const char* ip_address;
-    uint16_t port;
+    const char* port;
 } tcp_config_t;
 
 void receive_from_tcp_server(void* parameters);

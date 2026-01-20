@@ -15,7 +15,7 @@ add_executable(esp_networking
     server_gui/src/networking/tcp_server.hpp
     server_gui/src/networking/tcp_client_observer.hpp
     server_gui/src/networking/tcp_connection.hpp
-    server_gui/src/gui/gui_main.hpp
+    server_gui/src/gui/gui_window.hpp
 )
 
 target_include_directories(esp_networking PRIVATE
