@@ -2,6 +2,11 @@
 
 #include "gui/gui_window.hpp"
 
+/*
+TODO: 
+    - Need to gracefuly close sockets without errors
+*/
+
 int main() {
     gui_window gui_window;
     tcp_server server(gui_window);

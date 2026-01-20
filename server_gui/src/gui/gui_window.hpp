@@ -107,7 +107,7 @@ private:
         c[ImGuiCol_Border] = col(50, 20, 20);
         c[ImGuiCol_BorderShadow] = col(0, 0, 0);
 
-        // Base dark reds
+        ImVec4 black      = col(18, 18, 18);
         ImVec4 red_dark   = col(60, 20, 20);  
         ImVec4 red_active = col(80, 20, 20);  
         ImVec4 red_normal = col(100, 20, 20); 
@@ -138,8 +138,8 @@ private:
         c[ImGuiCol_TableHeaderBg] = red_dark;
         c[ImGuiCol_TableRowBg] = col(20, 20, 20);
         c[ImGuiCol_TableRowBgAlt] = col(25, 25, 25);
-        c[ImGuiCol_TableBorderStrong] = red_normal;
-        c[ImGuiCol_TableBorderLight] = red_dark;
+        c[ImGuiCol_TableBorderStrong] = black;
+        c[ImGuiCol_TableBorderLight] = black;
 
         // Scrollbar
         c[ImGuiCol_ScrollbarBg] = col(18, 18, 18);
@@ -176,25 +176,43 @@ private:
 
             if (ImGui::BeginTabItem("Connected"))
             {   
+                static int selected_esp = -1;
+                static int selected_row = -1;
+
                 if (ImGui::BeginTable("Connected ESPs", 2, ImGuiTableFlags_Borders)) {
                     ImGui::TableSetupColumn("ID");
                     ImGui::TableSetupColumn("Name");
                     ImGui::TableHeadersRow();
 
+                    int row_index = 0;
                     for (auto& esp : m_connected_esps) {
                         ImGui::TableNextRow();                             
-
                         ImGui::PushID(esp.esp_id);
+                        
                         ImGui::TableSetColumnIndex(0);
-                        ImGui::Text("%d", esp.esp_id);
+                        if (ImGui::Selectable(std::to_string(esp.esp_id).c_str(), row_index == selected_row)) {
+                            selected_esp = esp.esp_id;
+                            selected_row = row_index;
+                        }
 
                         ImGui::TableSetColumnIndex(1);
                         ImGui::InputText("##name", esp.name, IM_ARRAYSIZE(esp.name));
+
                         ImGui::PopID();
+
+                        row_index++;
                     }
 
                     ImGui::EndTable();
                 }   
+
+                ImGui::SetCursorPosY(dashboard_size.y - 2); 
+                if (ImGui::Button("Disconnect")) {
+                    if (selected_esp != -1) {
+                        get_tcp_server()->disconnect_client_by(selected_esp);
+                        selected_esp = -1;
+                    }
+                }
 
                 ImGui::EndTabItem();
             }
