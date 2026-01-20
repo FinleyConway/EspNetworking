@@ -17,7 +17,7 @@ class tcp_server
 {
 public:
     tcp_server(tcp_client_observer_base& observer) : m_acceptor(m_io_context), m_observer(observer) {
-        Logger::init();
+        logger::init();
         m_observer.set_tcp_server(this);
     }
     

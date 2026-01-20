@@ -3,6 +3,8 @@
 #include "networking/tcp_server.hpp"
 #include "networking/tcp_client_observer.hpp"
 
+#include "gui/gui_main.hpp"
+
 // REF: https://think-async.com/Asio/asio-1.36.0/doc/asio/tutorial/tutdaytime3.html
 // REF: https://github.com/alejandrofsevilla/boost-tcp-server-client 
 
@@ -35,37 +37,12 @@ public:
 int main() {
     tcp_observer observer;
     tcp_server server(observer);
+    gui_main gui_main;
 
     std::thread tcp_thread([&]() {
         server.start_listening(tcp::v4(), 8080);
     });
-
-    while (true) {
-        std::string out;
-
-        std::cout << "Command: \n";
-        std::cin >> out;
-
-        if (out == "close") {
-            server.close();
-            break;
-        }
-
-        if (out == "1") {
-            server.send_to_client_by(1, {
-                .esp_id = 1,
-                .is_led_on = true,
-                .is_restarting = false
-            });
-        }
-        if (out == "0") {
-            server.send_to_client_by(1, {
-                .esp_id = 1,
-                .is_led_on = false,
-                .is_restarting = false
-            });
-        }
-    }
+    gui_main.run();
 
     tcp_thread.join();
 
