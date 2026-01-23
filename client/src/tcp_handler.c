@@ -15,8 +15,8 @@
 #define RESET_BUTTON_PIN 13
 
 static const char* TCP_LOG_TAG = "TCP"; 
-int tcp_socket = 0;
-esp_info_t working_esp_info = {0};
+int g_tcp_socket = 0;
+esp_info_t g_working_esp_info = {0};
 
 typedef struct {
     int socket;
@@ -113,19 +113,20 @@ net_status_t recv_esp_info(int socket, esp_info_t* out_esp_info) {
 void try_notify_tcp_server_on_reset() {
      // this is created to avoid changes due to multiple tasks running
     esp_info_t reset_esp = {
-        .esp_id = working_esp_info.esp_id,
+        .esp_id = g_working_esp_info.esp_id,
         .is_led_on = false,
         .is_restarting = true
     };
 
     // attempt to notify server about restarting
-    net_status_t status = send_esp_info(tcp_socket, reset_esp); 
+    net_status_t status = send_esp_info(g_tcp_socket, reset_esp); 
 
     if (status == NET_TCP_SUCCESS) {
         sleep_ms(200); // bit rough but just wait a little for server to know
     }
 
-     // restart esp
+    // restart esp
+    close(g_tcp_socket);
     shutdown_wifi();
     esp_restart();
 }
@@ -141,16 +142,16 @@ void receive_from_tcp_server(void* parameters /* tcp_config_t */) {
         vTaskDelete(NULL);
     }
 
-    tcp_socket = tcp_result.socket;
+    g_tcp_socket = tcp_result.socket;
 
     ESP_LOGI(TCP_LOG_TAG, "Attempting to receive conformation from server...");
 
     while (true) {
-        net_status_t status = recv_esp_info(tcp_socket, &working_esp_info);
+        net_status_t status = recv_esp_info(g_tcp_socket, &g_working_esp_info);
 
         switch (status) {
             case NET_TCP_SUCCESS:
-                handle_request(working_esp_info);
+                handle_request(g_working_esp_info);
                 break;
 
             case NET_TCP_FAILURE:
@@ -161,6 +162,8 @@ void receive_from_tcp_server(void* parameters /* tcp_config_t */) {
             case NET_TCP_CLOSE_CONNECTION:
             default:
                 ESP_LOGI(TCP_LOG_TAG, "Connection closed, dying...");
+
+                close(g_tcp_socket);
                 vTaskDelete(NULL);
         }
     }
