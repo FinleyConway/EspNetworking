@@ -53,11 +53,14 @@ private:
 
                 tcp_server->disconnect_client_by(esp.esp_id);
 
-                if (s_selected_row >= connected_esps.size()) {
-                    s_selected_row = connected_esps.size() - 1;
-                }
-                else {
+                if (connected_esps.empty()) {
                     s_selected_row = -1;
+                }
+                else if (s_selected_row < 0) {
+                    s_selected_row = 0;
+                }
+                else if (s_selected_row >= static_cast<int>(connected_esps.size())) {
+                    s_selected_row = static_cast<int>(connected_esps.size()) - 1;
                 }
             }
         }

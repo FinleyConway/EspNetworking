@@ -1,11 +1,7 @@
 #include <thread>
 
+#include "networking/tcp_server.hpp"
 #include "gui/gui_window.hpp"
-
-/*
-TODO: 
-    - Need to gracefuly close sockets without errors
-*/
 
 int main() {
     gui_window gui_window;
