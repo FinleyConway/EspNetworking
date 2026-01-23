@@ -14,9 +14,9 @@ int main() {
     std::thread tcp_thread([&]() {
         server.start_listening(tcp::v4(), 8080);
     });
+    
+    tcp_thread.detach();
     gui_window.run();
-
-    tcp_thread.join();
 
     return 0;
 }

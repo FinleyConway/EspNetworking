@@ -16,6 +16,10 @@
 class gui_window : public tcp_client_observer_base
 {
 public:
+    ~gui_window() {
+        get_tcp_server()->close();
+    }
+
     void on_client_connect(uint16_t client_id) override {
         // send confirmation to esp_32
         get_tcp_server()->send_to_client_by(client_id, {
