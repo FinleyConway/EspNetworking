@@ -10,23 +10,8 @@
 #include "../networking/tcp_server.hpp"
 #include "../networking/tcp_logger.hpp"
 
-/*
-colours = { 
-    rgb(4, 12, 6), 
-    rgb(17, 35, 24), 
-    rgb(30, 58, 41), 
-    rgb(48, 93, 66), 
-    rgb(77, 128, 97), 
-    rgb(137, 162, 87), 
-    rgb(190, 220, 127), 
-    rgb(238, 255, 204) 
-}
-*/
-
-struct esp_32 {
-    uint16_t esp_id = 0;
-    char name[20];
-};
+#include "esp_32.hpp"
+#include "gui_connection_tab.hpp"
 
 class gui_window : public tcp_client_observer_base
 {
@@ -176,43 +161,8 @@ private:
 
             if (ImGui::BeginTabItem("Connected"))
             {   
-                static int selected_esp = -1;
-                static int selected_row = -1;
-
-                if (ImGui::BeginTable("Connected ESPs", 2, ImGuiTableFlags_Borders)) {
-                    ImGui::TableSetupColumn("ID");
-                    ImGui::TableSetupColumn("Name");
-                    ImGui::TableHeadersRow();
-
-                    int row_index = 0;
-                    for (auto& esp : m_connected_esps) {
-                        ImGui::TableNextRow();                             
-                        ImGui::PushID(esp.esp_id);
-                        
-                        ImGui::TableSetColumnIndex(0);
-                        if (ImGui::Selectable(std::to_string(esp.esp_id).c_str(), row_index == selected_row)) {
-                            selected_esp = esp.esp_id;
-                            selected_row = row_index;
-                        }
-
-                        ImGui::TableSetColumnIndex(1);
-                        ImGui::InputText("##name", esp.name, IM_ARRAYSIZE(esp.name));
-
-                        ImGui::PopID();
-
-                        row_index++;
-                    }
-
-                    ImGui::EndTable();
-                }   
-
-                ImGui::SetCursorPosY(dashboard_size.y - 2); 
-                if (ImGui::Button("Disconnect")) {
-                    if (selected_esp != -1) {
-                        get_tcp_server()->disconnect_client_by(selected_esp);
-                        selected_esp = -1;
-                    }
-                }
+                gui_connection_tab::show_connection_table(m_connected_esps);
+                gui_connection_tab::handle_button_options(get_tcp_server(), m_connected_esps, dashboard_size);
 
                 ImGui::EndTabItem();
             }
