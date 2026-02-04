@@ -10,4 +10,3 @@ typedef struct {
 } tcp_config_t;
 
 void receive_from_tcp_server(void* parameters);
-void reset_esp_on_button(void* parameters);

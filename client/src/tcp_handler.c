@@ -12,8 +12,6 @@
 #include "handle_tcp_request.h"
 
 // ===================== Private ===================== 
-#define RESET_BUTTON_PIN 13
-
 static const char* TCP_LOG_TAG = "TCP"; 
 int g_tcp_socket = 0;
 esp_info_t g_working_esp_info = {0};
@@ -166,17 +164,5 @@ void receive_from_tcp_server(void* parameters /* tcp_config_t */) {
                 close(g_tcp_socket);
                 vTaskDelete(NULL);
         }
-    }
-}
-
-void reset_esp_on_button(void* parameters) {
-    while (true) {
-        bool level = gpio_get_level(RESET_BUTTON_PIN);
-
-        if (!level) {
-            try_notify_tcp_server_on_reset();
-        }
-
-        sleep_ms(100);
     }
 }
