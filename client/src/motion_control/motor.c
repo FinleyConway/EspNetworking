@@ -1,6 +1,11 @@
 #include "motor.h"
 
-void init_motor(gpio_num_t a1, gpio_num_t a2) {
+#include <freertos/queue.h>
+#include <esp_log.h>
+
+static QueueHandle_t s_motor_queue = NULL;
+
+void motor_init(gpio_num_t a1, gpio_num_t a2) {
     // configure pwm timer
     ledc_timer_config_t pwm_timer = {
         .speed_mode         = LEDC_HIGH_SPEED_MODE,
@@ -34,18 +39,33 @@ void init_motor(gpio_num_t a1, gpio_num_t a2) {
         .hpoint         = 0,
     };
     ledc_channel_config(&pwm_channel_1);
+
+    // create a motor queue so other tasks can control the state of the motor
+    s_motor_queue = xQueueCreate(1, sizeof(motor_t));
+
+    if (s_motor_queue == NULL) {
+        ESP_LOGE("MOTOR", "Motor queue handler failed to create");
+    }
 }
 
-void set_motor_direction(motor_t* motor, motor_direction_t direction) {
-    if (motor == NULL) return;
+void motor_set_direction(motor_t* motor, motor_direction_t direction) {
+    if (motor == NULL) {
+        ESP_LOGE("MOTOR", "Cant change motor direction due to null motor object");
+        return;
+    }
+
+    // [a1, a2]
+    // [0,   1] - clockwise
+    // [1,   0] - anti-clockwise
+    // [0,   0] - stop
 
     if (direction == motor_direction_clockwise) {
-        ledc_set_duty(MOTOR_PWM_MODE, LEDC_CHANNEL_0, motor->current_speed);
+        ledc_set_duty(MOTOR_PWM_MODE, LEDC_CHANNEL_0, motor->current_duty);
         ledc_set_duty(MOTOR_PWM_MODE, LEDC_CHANNEL_1, 0);
     }
     else if (direction == motor_direction_anti_clockwise) {
         ledc_set_duty(MOTOR_PWM_MODE, LEDC_CHANNEL_0, 0);
-        ledc_set_duty(MOTOR_PWM_MODE, LEDC_CHANNEL_1, motor->current_speed);
+        ledc_set_duty(MOTOR_PWM_MODE, LEDC_CHANNEL_1, motor->current_duty);
     }
     else if (direction == motor_direction_none) {
         ledc_set_duty(MOTOR_PWM_MODE, LEDC_CHANNEL_0, 0);
@@ -59,10 +79,36 @@ void set_motor_direction(motor_t* motor, motor_direction_t direction) {
     motor->current_direction = direction;
 }
 
-void set_motor_speed(motor_t* motor, uint32_t speed) {
-    if (motor == NULL) return;
+void motor_set_duty(motor_t* motor, uint32_t duty) {
+    if (motor == NULL) {
+        ESP_LOGE("MOTOR", "Cant change motor duty due to null motor object");
+        return;
+    }
 
-    motor->current_speed = speed;
+    motor->current_duty = duty;
 
-    set_motor_direction(motor, motor->current_direction);
+    motor_set_direction(motor, motor->current_direction);
+}
+
+bool motor_update_state(motor_t motor) {
+    if (s_motor_queue == NULL) {
+        ESP_LOGE("MOTOR", "Motor queue handler is null");
+        return false;
+    }
+
+    return xQueueOverwrite(s_motor_queue, &motor) == pdPASS;
+}
+
+bool motor_state_receive(motor_t* out_motor, TickType_t timeout) {
+    if (s_motor_queue == NULL) {
+        ESP_LOGE("MOTOR", "Motor queue handler is null");
+        return false;
+    }   
+
+    if (out_motor == NULL) {
+        ESP_LOGE("MOTOR", "Motor recieve object is null");
+        return false;
+    }
+
+    return xQueueReceive(s_motor_queue, &(out_motor), timeout) == pdPASS;
 }
