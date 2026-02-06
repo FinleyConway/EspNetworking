@@ -1,11 +1,10 @@
 #pragma once
 
-#include <freertos/task.h>
-
 #include <math.h>
 
+#include <freertos/task.h>
+
 #include "motor.h"
-#include "sleep.h"
 
 static float ease_in_out_cubic(float x) {
     return x < 0.5 ? 4 * x * x * x : 1 - powf(-2 * x + 2, 3) / 2;
@@ -34,7 +33,7 @@ void adjust_motor_speed(motor_t* motor) {
 
         // update motor duty and wait
         motor_set_duty(motor, current_duty);
-        sleep_ms(loop_ms);
+        vTaskDelay(pdMS_TO_TICKS(loop_ms));
 
         // check for changes mid way de/accelerating
         if (motor_state_receive(motor, 0)) {

@@ -4,4 +4,4 @@
 .vscode/launch.json
 .vscode/ipch
 
-src/wifi_creds.h
+src/networking/wifi_creds.h

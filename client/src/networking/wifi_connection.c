@@ -1,4 +1,4 @@
-#include "wifi_setup.h"
+#include "wifi_connection.h"
 
 #include <esp_wifi.h>
 #include <esp_log.h>
@@ -7,20 +7,22 @@
 #include "wifi_creds.h"
 
 // ===================== Private ===================== 
+static const char* s_tag = "WIFI";
 static EventGroupHandle_t s_wifi_event_group; // event group to contain status information
+static int s_max_failures = 10;
 static int s_retry_num = 0; // retry tracker
 
 static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
     if (event_base != WIFI_EVENT) return;
 
     if (event_id == WIFI_EVENT_STA_START) {
-        ESP_LOGI(WIFI_LOG_TAG, "Connecting to AP...");
+        ESP_LOGI(s_tag, "Connecting to AP...");
         esp_wifi_connect();
     }
 
     if (event_id == WIFI_EVENT_STA_DISCONNECTED) {
-        if (s_retry_num < MAX_FAILURES) {
-			ESP_LOGI(WIFI_LOG_TAG, "Reconnecting to AP...");
+        if (s_retry_num < s_max_failures) {
+			ESP_LOGI(s_tag, "Reconnecting to AP...");
 
             // re-attempt to connect back
 			esp_wifi_connect();
@@ -40,7 +42,7 @@ static void ip_event_handler(void* arg, esp_event_base_t event_base, int32_t eve
 	{
         // log connected ip address
         ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
-        ESP_LOGI(WIFI_LOG_TAG, "STA IP: " IPSTR, IP2STR(&event->ip_info.ip));
+        ESP_LOGI(s_tag, "STA IP: " IPSTR, IP2STR(&event->ip_info.ip));
 
         // clear rety attempts
         s_retry_num = 0;
@@ -52,7 +54,7 @@ static void ip_event_handler(void* arg, esp_event_base_t event_base, int32_t eve
 }
 // ===================== Private ===================== 
 
-net_status_t connect_to_wifi(void)
+net_status_t wifi_connect(void)
 {
 	net_status_t status = NET_WIFI_FAILURE;
 
@@ -96,7 +98,7 @@ net_status_t connect_to_wifi(void)
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config)); // set the wifi config
     ESP_ERROR_CHECK(esp_wifi_start()); // start the wifi driver
 
-    ESP_LOGI(WIFI_LOG_TAG, "STA initialization complete");
+    ESP_LOGI(s_tag, "STA initialization complete");
 
     // block thread until an wifi connection status occurs
     EventBits_t bits = xEventGroupWaitBits(
@@ -109,15 +111,15 @@ net_status_t connect_to_wifi(void)
 
     // evalute the bits that were returned when attempting to connect
     if (bits & NET_WIFI_SUCCESS) {
-        ESP_LOGI(WIFI_LOG_TAG, "Connected to ap");
+        ESP_LOGI(s_tag, "Connected to ap");
         status = NET_WIFI_SUCCESS;
     } 
     else if (bits & NET_WIFI_FAILURE) {
-        ESP_LOGI(WIFI_LOG_TAG, "Failed to connect to ap");
+        ESP_LOGI(s_tag, "Failed to connect to ap");
         status = NET_WIFI_FAILURE;
     } 
     else {
-        ESP_LOGE(WIFI_LOG_TAG, "UNEXPECTED EVENT");
+        ESP_LOGE(s_tag, "UNEXPECTED EVENT");
         status = NET_WIFI_FAILURE;
     }
 
@@ -129,7 +131,7 @@ net_status_t connect_to_wifi(void)
     return status;
 }
 
-void shutdown_wifi(void) {
+void wifi_shutdown(void) {
     ESP_ERROR_CHECK(esp_wifi_stop());
     ESP_ERROR_CHECK(esp_wifi_deinit());
 }
