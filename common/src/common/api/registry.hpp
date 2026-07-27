@@ -9,7 +9,4 @@ namespace common {
         esp_init_request_t,
         esp_init_response_t
     >;
-
-    using payload_t = registry_t::payload_t;
-    using packet_id_t = registry_t::packet_id_t;
 }

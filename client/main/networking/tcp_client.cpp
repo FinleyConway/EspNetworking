@@ -75,9 +75,9 @@ namespace client {
 
     tcp_status_t tcp_client_t::listen_to_server() {
         tcp_status_t status;
-        common::payload_t payload{};
+        common::registry_t::payload_t payload{};
 
-        const common::packet_id_t received_id = recv_payload_id(payload, status);
+        const common::registry_t::packet_id_t received_id = recv_payload_id(payload, status);
 
         if (status != tcp_status_t::success) return status;
 
@@ -124,8 +124,8 @@ namespace client {
         return tcp_status_t::success;
     }
 
-    common::packet_id_t tcp_client_t::recv_payload_id(common::payload_t& payload, tcp_status_t& status) const {
-        constexpr size_t packet_id_size = sizeof(common::packet_id_t);
+    common::registry_t::packet_id_t tcp_client_t::recv_payload_id(common::registry_t::payload_t& payload, tcp_status_t& status) const {
+        constexpr size_t packet_id_size = sizeof(common::registry_t::packet_id_t);
         size_t id_bytes_read = 0;
 
         status = recv_exact(payload.data(), packet_id_size, id_bytes_read);
@@ -133,17 +133,17 @@ namespace client {
         if (status != tcp_status_t::success) return 0;
 
         // get the payload size from the received id
-        common::packet_id_t received_id = 0;
+        common::registry_t::packet_id_t received_id = 0;
         std::memcpy(&received_id, payload.data(), packet_id_size);
 
         return received_id;
     }
 
-    size_t tcp_client_t::recv_payload(size_t expected_payload_bytes, common::payload_t& payload, tcp_status_t& status) {
+    size_t tcp_client_t::recv_payload(size_t expected_payload_bytes, common::registry_t::payload_t& payload, tcp_status_t& status) {
         size_t payload_bytes = 0;
 
         status = recv_exact(
-            payload.data() + sizeof(common::packet_id_t), 
+            payload.data() + sizeof(common::registry_t::packet_id_t), 
             expected_payload_bytes,
             payload_bytes
         );

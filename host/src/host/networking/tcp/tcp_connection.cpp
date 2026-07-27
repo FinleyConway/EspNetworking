@@ -13,7 +13,7 @@ namespace host {
         m_io_state.set_spec(id, registry, std::move(callback));
     }
 
-    bool tcp_connection_t::send(common::payload_t&& payload, size_t bytes) {
+    bool tcp_connection_t::send(common::registry_t::payload_t&& payload, size_t bytes) {
         return m_io_state.send(std::move(payload), bytes);
     }
 

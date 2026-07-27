@@ -37,7 +37,7 @@ namespace host {
         /// @param payload The message byte stream
         /// @param bytes The size of the message byte stream
         /// @return Has the message been sent
-        bool send(common::payload_t&& payload, size_t bytes);
+        bool send(common::registry_t::payload_t&& payload, size_t bytes);
 
         /// @brief Allow to stop or start receiving messages from this client
         /// @param enable The toggle state

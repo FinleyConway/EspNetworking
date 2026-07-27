@@ -32,7 +32,7 @@ namespace host {
         /// @param payload The message byte stream
         /// @param bytes The size of the message byte stream
         /// @return Has the message been sent
-        bool send(common::payload_t&& payload, size_t bytes);
+        bool send(common::registry_t::payload_t&& payload, size_t bytes);
 
         /// @brief Start receiving messages from client
         void start_receiving();
@@ -61,13 +61,13 @@ namespace host {
 
     private:
         struct write_state_t {
-            const common::payload_t payload;
+            const common::registry_t::payload_t payload;
             const size_t bytes = 0;
         };
 
         struct read_state_t {
-            common::packet_id_t id = 0;
-            common::payload_t payload;
+            common::registry_t::packet_id_t id = 0;
+            common::registry_t::payload_t payload;
         };
 
     private:

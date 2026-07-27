@@ -12,7 +12,7 @@ namespace host {
         m_disconnect_callback = std::move(callback);
     }
 
-    bool tcp_io_state_t::send(common::payload_t&& payload, size_t bytes) {
+    bool tcp_io_state_t::send(common::registry_t::payload_t&& payload, size_t bytes) {
         if (!m_socket.is_open()) return false;
 
         m_write_state_queue.emplace_back(
@@ -77,7 +77,7 @@ namespace host {
 
         asio::async_read(
             m_socket,
-            asio::buffer(&m_read_state.id, sizeof(common::packet_id_t)),
+            asio::buffer(&m_read_state.id, sizeof(common::registry_t::packet_id_t)),
             [this](const std::error_code& ec, size_t bytes_transferred) {
                 read_payload(ec, bytes_transferred);
             }
@@ -95,7 +95,7 @@ namespace host {
 
         asio::async_read(
             m_socket,
-            asio::buffer(m_read_state.payload.data() + sizeof(common::packet_id_t), size.value()),
+            asio::buffer(m_read_state.payload.data() + sizeof(common::registry_t::packet_id_t), size.value()),
             [this, id_bytes](const std::error_code& ec, size_t bytes_transferred) {
                 if (!has_or_handle_io_error(ec)) {
                     LOG_ASSERT(m_registry != nullptr, "m_registry is nullptr!");
