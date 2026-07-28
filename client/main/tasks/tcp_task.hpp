@@ -75,7 +75,7 @@ namespace client {
         }
 
         static void register_messages(tcp_client_t& client) {
-            client.register_receieve_callback<common::esp_init_request_t, &on_init_request>();
+            client.register_receieve_callback<common::esp_init_request_t, &on_init_request>(nullptr);
         }
 
         static void try_connect(tcp_client_t& client) {
@@ -139,7 +139,7 @@ namespace client {
         }
 
     private:
-        static void on_init_request(const common::esp_init_request_t& init_request) {
+        static void on_init_request(void* ctx, const common::esp_init_request_t& init_request) {
             ESP_LOGI("TCP_TASK", "Received server response, sending ack...");
 
             tcp_event_data_t event_data;

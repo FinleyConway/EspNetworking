@@ -56,7 +56,7 @@ using reg_t = common::packet_registry_impl_t<
 using payload_t = reg_t::payload_t;
 using reg_id_t = reg_t::packet_id_t;
 
-void test_one_callback(const test_one_t& t) {
+void test_one_callback(void* ctx, const test_one_t& t) {
     REQUIRE(t.id == 10);
 }
 
@@ -70,7 +70,7 @@ TEST_CASE( "packet_registry class", "[packet_registry]" ) {
         REQUIRE(*bytes_1 == 0);
         REQUIRE(bytes_2 == 4);
 
-        registry.register_callback<test_one_t, &test_one_callback>();
+        registry.register_callback<test_one_t, &test_one_callback>(nullptr);
 
         std::optional<size_t> reg_bytes_1 = registry.expected_payload_size(0);
         size_t reg_bytes_2 = registry.packet_size<test_one_t>();
@@ -100,7 +100,7 @@ TEST_CASE( "packet_registry class", "[packet_registry]" ) {
     }
 
     SECTION("Dispatch regisered payload") {
-        registry.register_callback<test_one_t, &test_one_callback>();
+        registry.register_callback<test_one_t, &test_one_callback>(nullptr);
         
         test_one_t input{ .id = 10 };
         payload_t payload = registry.create(input);
@@ -138,7 +138,7 @@ TEST_CASE( "packet_registry class", "[packet_registry]" ) {
     }
 
     SECTION("Dispatch payload size mismatch") {
-        registry.register_callback<test_one_t, &test_one_callback>();
+        registry.register_callback<test_one_t, &test_one_callback>(nullptr);
 
         test_one_t input{ .id = 10 };
         payload_t payload = registry.create(input);

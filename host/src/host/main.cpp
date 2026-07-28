@@ -4,6 +4,12 @@
 
 #include "common/messages/handshake.hpp"
 
+void esp_init(void* ctx, const common::esp_init_response_t& res) {
+    auto* handshake = static_cast<host::handshake_manager_t*>(ctx);
+
+    handshake->on_response_received(res);
+}
+
 int main() {
     host::logger_t::init();
     host::tcp_server_t server;
@@ -17,9 +23,7 @@ int main() {
         LOG_INFO("ESP: {} disconnected", id);
     });
 
-    server.register_receive_callback<common::esp_init_response_t>([&](const common::esp_init_response_t& res) {
-        handshake.on_response_received(res);
-    });
+    server.register_receive_callback<common::esp_init_response_t, esp_init>(&handshake);
 
     server.start();
     

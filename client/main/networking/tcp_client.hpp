@@ -28,8 +28,8 @@ namespace client {
         bool is_connected() const;
 
         template<typename T, auto Fn>
-        void register_receieve_callback() {
-            m_registry.register_callback<T, Fn>();
+        void register_receieve_callback(void* ctx) {
+            m_registry.register_callback<T, Fn>(ctx);
         }
 
         template<typename T>

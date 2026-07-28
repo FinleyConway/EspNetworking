@@ -49,7 +49,8 @@ namespace common {
         }
 
         struct callback_info_t {
-            void (*invoke)(std::span<uint8_t>) = nullptr;
+            void (*invoke)(void*, std::span<uint8_t>) = nullptr;
+            void* ctx = nullptr;
             size_t size = 0;
         };
 
@@ -92,16 +93,19 @@ namespace common {
         bool dispatch(packet_id_t id, payload_t&& payload, size_t bytes) const {
             if (id >= m_callback.size()) return false;
 
-            const auto& callback = m_callback[id];
+            auto& callback = m_callback[id];
 
             if (callback.invoke == nullptr) return false; // nothing to call
             if (bytes < sizeof(packet_id_t)) return false; // prevent underflow
             if (bytes - sizeof(packet_id_t) != callback.size) return false; // byte mismatch
 
-            callback.invoke(std::span<uint8_t> {
-                payload.data() + sizeof(packet_id_t),
-                callback.size
-            });
+            callback.invoke(
+                callback.ctx,
+                std::span<uint8_t> {
+                    payload.data() + sizeof(packet_id_t),
+                    callback.size
+                }
+            );
 
             return true;
         }
@@ -109,16 +113,18 @@ namespace common {
         /// @brief Register a callback for when receiving a message
         /// @tparam T The registered message type
         /// @tparam Fn The callback, void(const T&)
+        /// @param ctx A pointer ctx that can be called with the callback
         template<typename T, auto Fn>
-        void register_callback() {
+        void register_callback(void* ctx) {
             static_assert(contains<T>(), "T must be registered in common!");
 
             auto& callback = m_callback[get_type_of<T>()];
             
             callback.size = T::payload_size();
-            callback.invoke = [](std::span<uint8_t> payload) {
+            callback.ctx = ctx;
+            callback.invoke = [](void* ctx, std::span<uint8_t> payload) {
                 T obj = T::deserialise(payload);
-                Fn(obj);
+                Fn(ctx, obj);
             };
         }
 

@@ -98,11 +98,11 @@ namespace host {
 
         /// @brief Provide the callback for registered T
         /// @tparam T A registered message type 
-        /// @param fn The callback when receiving a message, void(const T&)
-        template<typename T, typename Fn>
-        void register_receive_callback(Fn&& fn) {
-            callback_holder_t<T>::fn = std::forward<Fn>(fn);
-            m_registry.template register_callback<T, callback_holder_t<T>::trampoline>();
+        /// @tparam fn The callback when receiving a message, void(void* ctx, const T&)
+        /// @param ctx A pointer ctx that can be called with the callback
+        template<typename T, auto Fn>
+        void register_receive_callback(void* ctx) {
+            m_registry.template register_callback<T, Fn>(ctx);
         }
 
         /// @brief Provide the callback for when a client connects
@@ -121,18 +121,6 @@ namespace host {
         void wait_for_connection();
 
         void create_new_connection(tcp_connection_ptr_t new_connection, const std::error_code& ec);
-
-    private:
-        // bit of a hack
-        // lets client have no heap alloc while host does whatever
-        template<typename T>
-        struct callback_holder_t {
-            static inline std::function<void(const T&)> fn;
-
-            static void trampoline(const T& value) {
-                fn(value);
-            }
-        };
 
     private:
         asio::io_context m_io_context;
